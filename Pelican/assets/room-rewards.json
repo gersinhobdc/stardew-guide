@@ -1,0 +1,40 @@
+{
+  "descricao": "Um dos dois unicos arquivos curados a mao do projeto. O jogo tem os bundles e suas recompensas, mas nao codifica 'fechar esta sala destrava aquilo' de forma consultavel. Sao 7 entradas e praticamente nao mudam entre versoes.",
+  "salas": {
+    "Pantry": {
+      "nome": "Despensa",
+      "destrava": "Estufa",
+      "detalhe": "Estufa na fazenda: planta qualquer coisa o ano inteiro, inclusive no inverno."
+    },
+    "Crafts Room": {
+      "nome": "Sala de Oficios",
+      "destrava": "Ponte para a Pedreira",
+      "detalhe": "Libera a ponte quebrada a leste da mina, dando acesso a Pedreira."
+    },
+    "Fish Tank": {
+      "nome": "Tanque de Peixes",
+      "destrava": "Bateia",
+      "detalhe": "Remove o pedregulho brilhante e libera o rio da montanha para bateia (panning)."
+    },
+    "Boiler Room": {
+      "nome": "Sala da Caldeira",
+      "destrava": "Vagonetes",
+      "detalhe": "Conserta os vagonetes: viagem rapida entre fazenda, mina, cidade e praia."
+    },
+    "Bulletin Board": {
+      "nome": "Mural de Avisos",
+      "destrava": "Amizade com todos",
+      "detalhe": "+2 coracoes de amizade com todos os moradores do vale."
+    },
+    "Vault": {
+      "nome": "Cofre",
+      "destrava": "Onibus para o Deserto",
+      "detalhe": "Conserta o onibus: acesso ao Deserto de Calico, Skull Cavern e Sr. Qi."
+    },
+    "Abandoned Joja Mart": {
+      "nome": "Joja Mart Abandonado",
+      "destrava": "Cinema",
+      "detalhe": "Bundle que Falta: transforma o Joja Mart abandonado no cinema do vale."
+    }
+  }
+}

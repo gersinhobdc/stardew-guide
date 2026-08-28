@@ -1,0 +1,10 @@
+{
+  "Name": "Pelican",
+  "Author": "gersinhobdc",
+  "Version": "0.1.0",
+  "Description": "Assistente pessoal: avisa na tela do jogo o que voce esta prestes a perder e o que o item na sua mao desbloqueia. Somente leitura, nao adiciona conteudo, nao envia mensagem de rede - clientes vanilla podem entrar normalmente.",
+  "UniqueID": "gersinhobdc.Pelican",
+  "EntryDll": "Pelican.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": []
+}
