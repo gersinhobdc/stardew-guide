@@ -41,6 +41,15 @@ public sealed class GameSnapshot
     /// <summary>O que voce esta carregando agora.</summary>
     public IReadOnlyList<Item> Inventory { get; init; } = Array.Empty<Item>();
 
+    /// <summary>O item selecionado na barra de ferramentas. Pode ser nulo.</summary>
+    public Item? HeldItem { get; init; }
+
+    /// <summary>O item na mao ainda pode ser doado ao museu? Calculado pelo jogo.</summary>
+    public bool HeldItemDonatable { get; init; }
+
+    /// <summary>Situacao das plantacoes da fazenda.</summary>
+    public CropSummary Crops { get; init; } = new();
+
     /// <summary>O que esta no bau marcado como bau do Centro Comunitario.</summary>
     public IReadOnlyList<Item> StagedItems { get; init; } = Array.Empty<Item>();
 

@@ -3,7 +3,9 @@ using Pelican.Config;
 using Pelican.Model;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Locations;
 using StardewValley.Objects;
+using StardewValley.TerrainFeatures;
 
 namespace Pelican.Data;
 
@@ -54,6 +56,9 @@ public static class SnapshotBuilder
             WeatherTomorrow = TranslateWeather(SafeGet(() => Game1.weatherForTomorrow, "?")),
             DailyLuck = SafeGet(static () => Game1.player?.DailyLuck ?? 0d, 0d),
             Inventory = ReadInventory(),
+            HeldItem = SafeGet(static () => Game1.player?.CurrentItem, null),
+            HeldItemDonatable = IsDonatable(SafeGet(static () => Game1.player?.CurrentItem, null)),
+            Crops = ReadCrops(season, monitor),
             StagedItems = ReadStagingChest(config, monitor),
             HasStagingChest = config.TemBauMarcado,
             Bundles = BundleReader.ReadAll(monitor),
@@ -153,6 +158,156 @@ public static class SnapshotBuilder
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// O museu ainda aceita este item? Quem decide e o proprio jogo, nao uma
+    /// lista curada - assim minerais e artefatos novos da 1.7 ja entram sozinhos.
+    /// </summary>
+    private static bool IsDonatable(Item? item)
+    {
+        if (item is null)
+            return false;
+
+        try
+        {
+            return Game1.getLocationFromName("ArchaeologyHouse") is LibraryMuseum museum
+                && museum.isItemSuitableForDonation(item);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Percorre as plantacoes da fazenda. So a Farm: estufa e ilha nao perdem
+    /// cultura na virada de estacao, entao o aviso nao se aplica a elas.
+    /// </summary>
+    private static CropSummary ReadCrops(string season, IMonitor monitor)
+    {
+        try
+        {
+            int daysLeftToGrow = Math.Max(0, 28 - Game1.dayOfMonth);
+            Season next = NextSeason(season);
+
+            int ready = 0;
+            int readyTomorrow = 0;
+            var wontMature = new Dictionary<string, int>();
+
+            foreach (GameLocation location in Game1.locations)
+            {
+                if (location is not Farm)
+                    continue;
+
+                foreach (var pair in location.terrainFeatures.Pairs)
+                {
+                    if (pair.Value is not HoeDirt dirt || dirt.crop is null)
+                        continue;
+
+                    if (dirt.readyForHarvest())
+                    {
+                        ready++;
+                        continue;
+                    }
+
+                    int remaining = DaysUntilHarvest(dirt.crop);
+                    if (remaining == 1)
+                        readyTomorrow++;
+
+                    // Vai morrer na virada? So conta se a cultura nao sobrevive
+                    // para a proxima estacao.
+                    if (remaining > daysLeftToGrow && !SurvivesInto(dirt.crop, next))
+                    {
+                        string name = CropName(dirt.crop);
+                        wontMature[name] = wontMature.GetValueOrDefault(name) + 1;
+                    }
+                }
+            }
+
+            return new CropSummary
+            {
+                ReadyToHarvest = ready,
+                ReadyTomorrow = readyTomorrow,
+                WontMature = wontMature
+            };
+        }
+        catch (Exception ex)
+        {
+            monitor.Log($"Nao consegui ler as plantacoes: {ex.Message}", LogLevel.Trace);
+            return new CropSummary();
+        }
+    }
+
+    /// <summary>
+    /// Dias ate a colheita. A ultima entrada de phaseDays e um sentinela gigante
+    /// (99999), por isso o laco para antes dela.
+    /// </summary>
+    private static int DaysUntilHarvest(Crop crop)
+    {
+        try
+        {
+            if (crop.fullyGrown.Value)
+                return 0;
+
+            var phases = crop.phaseDays;
+            if (phases is null || phases.Count == 0)
+                return 0;
+
+            int remaining = 0;
+            for (int i = crop.currentPhase.Value; i < phases.Count - 1; i++)
+                remaining += phases[i];
+
+            remaining -= crop.dayOfCurrentPhase.Value;
+
+            // Valor implausivel = leitura errada; melhor nao afirmar nada.
+            return remaining is < 0 or > 112 ? 0 : remaining;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private static bool SurvivesInto(Crop crop, Season next)
+    {
+        try
+        {
+            return crop.GetData()?.Seasons?.Contains(next) == true;
+        }
+        catch
+        {
+            // Na duvida, assume que sobrevive: um alarme falso de "vai morrer"
+            // e pior que um aviso a menos.
+            return true;
+        }
+    }
+
+    private static string CropName(Crop crop)
+    {
+        try
+        {
+            string? harvestId = crop.GetData()?.HarvestItemId;
+            if (!string.IsNullOrWhiteSpace(harvestId))
+                return ItemNames.Resolve(harvestId);
+        }
+        catch
+        {
+            // cai para o rotulo generico
+        }
+
+        return "planta";
+    }
+
+    private static Season NextSeason(string season)
+    {
+        return season?.ToLowerInvariant() switch
+        {
+            "spring" => Season.Summer,
+            "summer" => Season.Fall,
+            "fall" => Season.Winter,
+            _ => Season.Spring
+        };
     }
 
     private static T SafeGet<T>(Func<T> get, T fallback)

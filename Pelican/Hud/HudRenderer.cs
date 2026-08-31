@@ -60,12 +60,12 @@ public sealed class HudRenderer
         if (this.PanelOpen)
             this.DrawFullPanel(batch, snapshot, insights);
         else if (this.Config.MostrarHudCompacto)
-            this.DrawCompact(batch, insights);
+            this.DrawCompact(batch, snapshot, insights);
     }
 
     // ---------------------------------------------------------------- compacto
 
-    private void DrawCompact(SpriteBatch batch, IReadOnlyList<Insight> insights)
+    private void DrawCompact(SpriteBatch batch, GameSnapshot snapshot, IReadOnlyList<Insight> insights)
     {
         // O painel compacto so mostra o que tem prazo. Info fica para o F9,
         // senao o canto da tela vira uma parede de texto que voce para de ler.
@@ -75,32 +75,42 @@ public sealed class HudRenderer
             .Take(Math.Max(1, this.Config.MaxLinhasHud))
             .ToList();
 
-        if (lines.Count == 0)
+        var rows = new List<(string Text, Color Color)>();
+
+        if (this.Config.MostrarLinhaDeStatus)
+            rows.Add((StatusLine(snapshot), new Color(90, 90, 90)));
+
+        rows.AddRange(lines.Select(static i =>
+            ($"{PrefixFor(i.Urgency)} {i.ToCompactLine()}", ColorFor(i.Urgency))));
+
+        if (rows.Count == 0)
             return;
 
-        var texts = lines
-            .Select(static i => $"{PrefixFor(i.Urgency)} {i.ToCompactLine()}")
-            .ToList();
-
         SpriteFont font = Game1.smallFont;
-        int width = (int)texts.Max(t => font.MeasureString(t).X) + (Padding * 2);
+        int width = (int)rows.Max(r => font.MeasureString(r.Text).X) + (Padding * 2);
         int lineHeight = (int)font.MeasureString("A").Y + LineSpacing;
-        int height = (lineHeight * texts.Count) + (Padding * 2);
+        int height = (lineHeight * rows.Count) + (Padding * 2);
 
         (int x, int y) = this.AnchorFor(width, height);
 
         DrawBox(batch, x, y, width, height);
 
-        for (int i = 0; i < texts.Count; i++)
+        for (int i = 0; i < rows.Count; i++)
         {
             Utility.drawTextWithShadow(
                 batch,
-                texts[i],
+                rows[i].Text,
                 font,
                 new Vector2(x + Padding, y + Padding + (i * lineHeight)),
-                ColorFor(lines[i].Urgency)
+                rows[i].Color
             );
         }
+    }
+
+    /// <summary>Data, clima de hoje e de amanha, e sorte — numa linha só.</summary>
+    private static string StatusLine(GameSnapshot snapshot)
+    {
+        return $"{snapshot.DateLabel} · hoje {snapshot.WeatherToday} · amanha {snapshot.WeatherTomorrow} · {snapshot.LuckLabel}";
     }
 
     private (int, int) AnchorFor(int width, int height)

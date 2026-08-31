@@ -23,6 +23,9 @@ public sealed class ModConfig
     /// <summary>Canto do painel compacto: "TopLeft", "TopRight", "BottomLeft", "BottomRight".</summary>
     public string CantoHud { get; set; } = "TopLeft";
 
+    /// <summary>Primeira linha fixa do HUD com data, clima e sorte do dia.</summary>
+    public bool MostrarLinhaDeStatus { get; set; } = true;
+
     /// <summary>Abre o painel completo / quadro de co-op.</summary>
     public SButton TeclaPainel { get; set; } = SButton.F9;
 
@@ -46,6 +49,12 @@ public sealed class ModConfig
 
     /// <summary>Eventos de uma vez so, que nao voltam mais neste save.</summary>
     public bool AvisarPerdiveis { get; set; } = true;
+
+    /// <summary>Para que serve o item selecionado na mao: bundle, presente amado, museu.</summary>
+    public bool AvisarItemNaMao { get; set; } = true;
+
+    /// <summary>Plantacoes prontas e, principalmente, as que nao dao tempo de colher.</summary>
+    public bool AvisarColheita { get; set; } = true;
 
     // ---- Bau de staging ----
 

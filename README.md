@@ -9,32 +9,38 @@ item na sua mão desbloqueia.
 
 ---
 
-## O princípio: instalar o que existe, construir só o que falta
+## Dependência única: SMAPI
 
-Quase tudo que um assistente de Stardew precisa fazer **já existe de graça**. Reconstruir isso
-seria semanas jogadas fora — e é o que mataria este projeto.
+**O Pelican não depende de nenhum mod de terceiros.** Ele lê tudo direto do jogo —
+`Game1.netWorldState.Value.BundleData`, `Data/Crops`, `Data/NPCGiftTastes`, `LibraryMuseum` —
+em runtime. Instalou o [SMAPI](https://smapi.io) 4.x, está pronto.
 
-### Pré-requisitos (instale primeiro, são eles que fazem o grosso)
+Isso é decisão de projeto, não acidente: um sistema próprio não quebra porque outra pessoa
+abandonou o mod dela, e não fica preso à versão que ela suporta.
 
-| Mod | O que resolve |
+### O que ele faz
+
+| | |
 |---|---|
-| [SMAPI](https://smapi.io) 4.x | Base. Não altera a versão do jogo |
-| **UI Info Suite 2** | Sorte do dia, clima de amanhã, aniversários, dias até colheita, calendário em qualquer lugar |
-| **Lookup Anything** | O "guia absoluto": F1 em qualquer item/NPC/peixe mostra tudo |
-| **Community Center Companion** | Tooltip de bundle no inventário |
+| **Item na mão** | Serve pra qual bundle, quem ama de presente, museu ainda aceita |
+| **Cadeia de consequência** | Não *"é de um bundle"*, mas **"Enguia → fecha Tanque de Peixes → libera a Bateia"** |
+| **Staging no baú** | Marque um baú como baú do CC; ele credita o que está guardado e avisa quando um bundle está **pronto pra entregar** |
+| **Colheita** | Prontas hoje/amanhã e, principalmente, as que **não dão tempo** de amadurecer antes da virada |
+| **Prazo de plantio** | Último dia útil pra plantar cada cultura da estação |
+| **Fim de estação** | O que some na virada |
+| **Clima × pendências** | "Chove hoje **e** você precisa de Enguia, que só aparece na chuva" |
+| **Sorte do dia** | Só quando é extrema o bastante pra mudar sua decisão |
+| **Aniversários e festivais** | Hoje e nos próximos dias |
+| **Perdíveis** | Avaliação do Vovô, Old Master Cannoli, Strange Capsule, Journal Scraps, Winter Mystery — avisa **antes** do ponto de não retorno |
+| **Quadro de co-op** | F9 → print → WhatsApp |
 
-**Depois da Fase 0 você já tem ~70% do que queria, sem uma linha de código.**
-Jogue uma semana assim antes de construir qualquer coisa.
+### Mods opcionais (não são pré-requisito)
 
-### O que o Pelican adiciona (e que não existe em lugar nenhum)
+Se quiser conforto extra, estes convivem sem conflito — e o Pelican tem config pra desligar
+qualquer sobreposição. **Ignorar todos não tira nada do que está na tabela acima.**
 
-1. **Staging no baú** — marque um baú como "baú do Centro Comunitário". O Pelican credita o
-   que você guardou ali contra o que falta e avisa quando um bundle está **pronto pra entregar**.
-2. **Cadeia de consequência** — os outros mods dizem *"este item é de um bundle"*. O Pelican diz
-   **"Enguia → fecha Tanque de Peixes → libera a Bateia"**.
-3. **Perdíveis de uma vez só** — avaliação do Vovô, Old Master Cannoli, Strange Capsule,
-   Journal Scraps, Winter Mystery. Avisa **antes** do ponto de não retorno.
-4. **Quadro de co-op printável** — estado da fazenda numa tela que você printa e manda no WhatsApp.
+- **Lookup Anything** — F1 em qualquer coisa, com profundidade de enciclopédia
+- **UI Info Suite 2** — alcance de aspersor, barra de XP, indicador de animais
 
 ---
 
@@ -52,6 +58,8 @@ reabrir o plano.
 - ❌ **LLM.** O mod tem um HUD e um painel.
 - ❌ **Scraping de wiki.** Os dados vêm do próprio jogo, em runtime.
 - ❌ **App de navegador / servidor local.** Você joga no PC; o HUD já é "a mesma tela".
+- ❌ **Enciclopédia completa de todo item.** Isso é o Lookup Anything, e ele é melhor nisso.
+  O Pelican responde *"o que faço com isto agora"*, não *"me conte tudo sobre isto"*.
 
 ---
 

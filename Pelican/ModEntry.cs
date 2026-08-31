@@ -31,6 +31,10 @@ public sealed class ModEntry : Mod
 
     private readonly List<IAdvisor> Advisors = new();
     private WeatherLuckAdvisor? WeatherAdvisor;
+    private HeldItemAdvisor? HeldAdvisor;
+
+    /// <summary>Ultimo slot da barra de ferramentas, para detectar troca de item na mao.</summary>
+    private int LastToolIndex = -1;
 
     private GameSnapshot? Snapshot;
     private IReadOnlyList<Insight> Insights = Array.Empty<Insight>();
@@ -54,6 +58,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;
         helper.Events.GameLoop.DayStarted += this.OnDayStarted;
         helper.Events.GameLoop.DayEnding += this.OnDayEnding;
+        helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
         helper.Events.Player.InventoryChanged += this.OnInventoryChanged;
         helper.Events.World.ChestInventoryChanged += this.OnChestInventoryChanged;
         helper.Events.Display.RenderedHud += this.OnRenderedHud;
@@ -111,6 +116,15 @@ public sealed class ModEntry : Mod
 
         if (this.Config.AvisarPerdiveis)
             this.Advisors.Add(new MissableAdvisor(this.Secrets));
+
+        if (this.Config.AvisarItemNaMao)
+        {
+            this.HeldAdvisor = new HeldItemAdvisor(helper.GameContent, this.Monitor);
+            this.Advisors.Add(this.HeldAdvisor);
+        }
+
+        if (this.Config.AvisarColheita)
+            this.Advisors.Add(new HarvestAdvisor());
     }
 
     // ----------------------------------------------------------------- eventos
@@ -124,6 +138,7 @@ public sealed class ModEntry : Mod
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
     {
         this.WeatherAdvisor?.InvalidateCache();
+        this.HeldAdvisor?.InvalidateCache();
         this.AnnouncedReady.Clear();
         this.Dirty = true;
 
@@ -136,6 +151,24 @@ public sealed class ModEntry : Mod
     private void OnDayEnding(object? sender, DayEndingEventArgs e)
     {
         this.Usage.EndDay();
+    }
+
+    /// <summary>
+    /// Trocar de item na barra de ferramentas muda o que o HUD deve dizer, mas nao
+    /// existe evento para isso. Verifica a cada quarto de segundo, que e barato e
+    /// imperceptivelmente rapido.
+    /// </summary>
+    private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
+    {
+        if (!e.IsMultipleOf(15) || !Context.IsWorldReady)
+            return;
+
+        int current = Game1.player?.CurrentToolIndex ?? -1;
+        if (current == this.LastToolIndex)
+            return;
+
+        this.LastToolIndex = current;
+        this.Dirty = true;
     }
 
     private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
