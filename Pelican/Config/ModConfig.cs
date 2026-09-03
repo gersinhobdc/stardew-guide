@@ -18,7 +18,19 @@ public sealed class ModConfig
     public bool MostrarHudCompacto { get; set; } = true;
 
     /// <summary>Quantas linhas o painel compacto mostra. Acima de ~6 vira ruido.</summary>
-    public int MaxLinhasHud { get; set; } = 5;
+    public int MaxLinhasHud { get; set; } = 4;
+
+    /// <summary>
+    /// Largura maxima do painel compacto, em caracteres. O texto e cortado com "..."
+    /// para o HUD nunca tomar a tela. O F9 mostra o texto inteiro.
+    /// </summary>
+    public int MaxCaracteresPorLinha { get; set; } = 62;
+
+    /// <summary>
+    /// Esconder a consequencia ("-> libera a Bateia") no painel compacto.
+    /// Deixa o HUD bem menor; a consequencia continua no F9.
+    /// </summary>
+    public bool HudCompactoSoTitulo { get; set; } = false;
 
     /// <summary>Canto do painel compacto: "TopLeft", "TopRight", "BottomLeft", "BottomRight".</summary>
     public string CantoHud { get; set; } = "TopLeft";
@@ -28,6 +40,9 @@ public sealed class ModConfig
 
     /// <summary>Abre o painel completo / quadro de co-op.</summary>
     public SButton TeclaPainel { get; set; } = SButton.F9;
+
+    /// <summary>Esconde ou mostra o painel compacto do canto.</summary>
+    public SButton TeclaEsconder { get; set; } = SButton.F8;
 
     /// <summary>Marca o bau sob o cursor como bau do Centro Comunitario.</summary>
     public SButton TeclaMarcarBau { get; set; } = SButton.F10;

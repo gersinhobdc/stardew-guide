@@ -257,6 +257,11 @@ public sealed class ModEntry : Mod
             this.Dirty = true;
             this.Hud.PanelOpen = !this.Hud.PanelOpen;
         }
+        else if (e.Button == this.Config.TeclaEsconder)
+        {
+            this.Hud.Hidden = !this.Hud.Hidden;
+            this.Hud.PanelOpen = false;
+        }
         else if (e.Button == this.Config.TeclaMarcarBau)
         {
             this.MarkChestUnderCursor();

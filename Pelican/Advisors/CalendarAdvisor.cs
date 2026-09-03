@@ -58,8 +58,12 @@ public sealed class CalendarAdvisor : IAdvisor
     }
 
     /// <summary>
-    /// Ultimo dia util para plantar cada cultura. Calculado de Data/Crops:
-    /// soma dos dias de fase contra os dias que restam na estacao.
+    /// Ultimo dia util para plantar. Calculado de Data/Crops: soma dos dias de
+    /// fase contra os dias que restam na estacao.
+    ///
+    /// Agrupado numa linha por prazo, e nao uma por semente: no fim da estacao
+    /// varias culturas vencem no mesmo dia, e cinco linhas quase identicas viram
+    /// parede de texto que voce para de ler.
     /// </summary>
     private IEnumerable<Insight> PlantingDeadlines(GameSnapshot snapshot)
     {
@@ -73,6 +77,9 @@ public sealed class CalendarAdvisor : IAdvisor
 
             // Dias disponiveis para crescer se plantar hoje (planta hoje, colhe ate o dia 28).
             int daysAvailable = snapshot.DaysLeftInSeason - 1;
+
+            var today = new List<(string Name, string Id)>();
+            var tomorrow = new List<(string Name, string Id)>();
 
             foreach ((string seedId, CropData? data) in crops)
             {
@@ -88,21 +95,15 @@ public sealed class CalendarAdvisor : IAdvisor
                 if (slack is < 0 or > 1)
                     continue;
 
-                string cropName = ItemNames.Resolve(data.HarvestItemId ?? seedId);
-                string seedName = ItemNames.Resolve(seedId);
-
-                results.Add(new Insight(
-                    Id: $"plantio:{seedId}:{snapshot.Season}:{snapshot.Year}",
-                    Urgency: slack == 0 ? Urgency.Today : Urgency.Soon,
-                    Title: slack == 0
-                        ? $"HOJE e o ultimo dia para plantar {seedName}"
-                        : $"Amanha e o ultimo dia para plantar {seedName}",
-                    Detail: $"{cropName} leva {growth} dias e restam {daysAvailable} de cultivo nesta estacao.",
-                    Consequence: "depois disso nao colhe antes da virada",
-                    Source: "Calendario",
-                    RelatedItemIds: new[] { seedId }
-                ));
+                var entry = (ItemNames.Resolve(seedId), seedId);
+                (slack == 0 ? today : tomorrow).Add(entry);
             }
+
+            if (today.Count > 0)
+                results.Add(Deadline(snapshot, today, "HOJE", Urgency.Today, daysAvailable));
+
+            if (tomorrow.Count > 0)
+                results.Add(Deadline(snapshot, tomorrow, "Amanha", Urgency.Soon, daysAvailable));
         }
         catch (Exception ex)
         {
@@ -110,6 +111,31 @@ public sealed class CalendarAdvisor : IAdvisor
         }
 
         return results;
+    }
+
+    private static Insight Deadline(
+        GameSnapshot snapshot,
+        List<(string Name, string Id)> seeds,
+        string when,
+        Urgency urgency,
+        int daysAvailable)
+    {
+        var names = seeds.Select(static s => s.Name).OrderBy(static n => n).ToList();
+        string shown = string.Join(", ", names.Take(3));
+        if (names.Count > 3)
+            shown += $" +{names.Count - 3}";
+
+        return new Insight(
+            Id: $"plantio:{when}:{snapshot.Season}:{snapshot.Year}",
+            Urgency: urgency,
+            Title: $"{when}: ultimo dia de plantio — {shown}",
+            Detail: names.Count > 3
+                ? $"Todas: {string.Join(", ", names)}. Restam {daysAvailable} dias de cultivo."
+                : $"Restam {daysAvailable} dias de cultivo nesta estacao.",
+            Consequence: "depois nao colhe antes da virada",
+            Source: "Calendario",
+            RelatedItemIds: seeds.Select(static s => s.Id).ToList()
+        );
     }
 
     /// <summary>Aniversarios de hoje e dos proximos 2 dias, de Data/Characters.</summary>

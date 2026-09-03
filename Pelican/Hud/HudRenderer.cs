@@ -29,6 +29,9 @@ public sealed class HudRenderer
     /// <summary>Painel completo aberto? Alternado pela tecla do painel.</summary>
     public bool PanelOpen { get; set; }
 
+    /// <summary>Painel compacto escondido pela tecla de esconder (nao persiste na config).</summary>
+    public bool Hidden { get; set; }
+
     private static Color ColorFor(Urgency urgency) => urgency switch
     {
         Urgency.Missable => new Color(200, 40, 40),
@@ -59,8 +62,15 @@ public sealed class HudRenderer
     {
         if (this.PanelOpen)
             this.DrawFullPanel(batch, snapshot, insights);
-        else if (this.Config.MostrarHudCompacto)
+        else if (this.Config.MostrarHudCompacto && !this.Hidden)
             this.DrawCompact(batch, snapshot, insights);
+    }
+
+    /// <summary>Corta a linha no limite configurado, para o HUD nunca tomar a tela.</summary>
+    private string Truncate(string text)
+    {
+        int max = Math.Max(20, this.Config.MaxCaracteresPorLinha);
+        return text.Length <= max ? text : text[..(max - 1)] + "…";
     }
 
     // ---------------------------------------------------------------- compacto
@@ -78,10 +88,13 @@ public sealed class HudRenderer
         var rows = new List<(string Text, Color Color)>();
 
         if (this.Config.MostrarLinhaDeStatus)
-            rows.Add((StatusLine(snapshot), new Color(90, 90, 90)));
+            rows.Add((this.Truncate(StatusLine(snapshot)), new Color(90, 90, 90)));
 
-        rows.AddRange(lines.Select(static i =>
-            ($"{PrefixFor(i.Urgency)} {i.ToCompactLine()}", ColorFor(i.Urgency))));
+        rows.AddRange(lines.Select(i =>
+        {
+            string body = this.Config.HudCompactoSoTitulo ? i.Title : i.ToCompactLine();
+            return (this.Truncate($"{PrefixFor(i.Urgency)} {body}"), ColorFor(i.Urgency));
+        }));
 
         if (rows.Count == 0)
             return;
@@ -187,7 +200,8 @@ public sealed class HudRenderer
         }
 
         rows.Add(("", Game1.textColor));
-        rows.Add(("F9 fecha · F10 marca o bau sob o cursor", new Color(110, 110, 110)));
+        rows.Add(("F9 fecha · F8 esconde o painel do canto · F10 marca o bau sob o cursor",
+            new Color(110, 110, 110)));
 
         int width = (int)rows.Max(r => font.MeasureString(r.Text).X) + (Padding * 2);
         width = Math.Min(width, Game1.uiViewport.Width - 80);
