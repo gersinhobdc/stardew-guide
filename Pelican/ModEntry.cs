@@ -66,6 +66,7 @@ public sealed class ModEntry : Mod
 
         helper.ConsoleCommands.Add("pelican_dump", "Despeja o estado que o Pelican esta lendo (diagnostico).", this.CommandDump);
         helper.ConsoleCommands.Add("pelican_uso", "Mostra o placar do Portao 1.", this.CommandUsage);
+        helper.ConsoleCommands.Add("pelican_item", "Diagnostica o item na mao: id, bundles que o pedem, museu.", this.CommandItem);
 
         this.Monitor.Log("Pelican carregado. Somente leitura, sem conteudo novo, sem rede.", LogLevel.Info);
     }
@@ -409,5 +410,66 @@ public sealed class ModEntry : Mod
     private void CommandUsage(string command, string[] args)
     {
         this.Monitor.Log(Environment.NewLine + this.Usage.Summary(), LogLevel.Info);
+    }
+
+    /// <summary>
+    /// Diagnostica o item na mao. Existe porque "nao apareceu nada" tem varias
+    /// causas possiveis — item ja doado, bundle ja completo, id que nao casa —
+    /// e sem isto nao da para saber qual delas foi.
+    /// </summary>
+    private void CommandItem(string command, string[] args)
+    {
+        if (!Context.IsWorldReady)
+        {
+            this.Monitor.Log("Carregue um save primeiro.", LogLevel.Info);
+            return;
+        }
+
+        this.Dirty = true;
+        this.Refresh();
+
+        Item? item = this.Snapshot?.HeldItem;
+        if (this.Snapshot is null || item is null)
+        {
+            this.Monitor.Log("Nenhum item selecionado na barra de ferramentas.", LogLevel.Info);
+            return;
+        }
+
+        GameSnapshot s = this.Snapshot;
+        var lines = new List<string>
+        {
+            "",
+            $"=== ITEM NA MAO: {item.DisplayName} ===",
+            $"QualifiedItemId: {item.QualifiedItemId} · Category: {item.Category} · Stack: {item.Stack}",
+            $"Qualidade: {(item is StardewValley.Object o ? o.Quality : 0)}",
+            $"Museu aceita: {(s.HeldItemDonatable ? "SIM" : "nao (ja doado, ou nao e doavel)")}",
+            $"Bundles incompletos no save: {s.IncompleteBundles.Count()} (de {s.Bundles.Count} lidos)",
+            ""
+        };
+
+        var matches = s.IncompleteBundles
+            .SelectMany(b => b.MissingSlots.Where(slot => Data.ItemNames.Matches(item, slot)).Select(slot => (b, slot)))
+            .ToList();
+
+        if (matches.Count > 0)
+        {
+            lines.Add("--- Pedido por ---");
+            foreach ((BundleInfo bundle, BundleSlot slot) in matches)
+                lines.Add($"  [{bundle.Room}] {bundle.DisplayName} — pede {slot} — {bundle.ProgressBar()}");
+        }
+        else if (s.Bundles.Count == 0)
+        {
+            lines.Add("Nenhum bundle foi lido. Ou o Centro Comunitario ja acabou (rota Joja),");
+            lines.Add("ou o parser precisa de ajuste — mande esta saida junto do log do SMAPI.");
+        }
+        else
+        {
+            lines.Add("Nenhum bundle incompleto pede este item.");
+            lines.Add("Slots que ainda faltam, para conferir a olho:");
+            foreach (BundleInfo b in s.IncompleteBundles.Take(8))
+                lines.Add($"  [{b.Room}] {b.DisplayName}: {string.Join(", ", b.MissingSlots.Select(static x => $"{x.DisplayName}(id {x.ItemId})"))}");
+        }
+
+        this.Monitor.Log(string.Join(Environment.NewLine, lines), LogLevel.Info);
     }
 }

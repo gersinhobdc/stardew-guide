@@ -48,6 +48,15 @@ public static class BundleReader
 
             CommunityCenter? cc = Game1.getLocationFromName("CommunityCenter") as CommunityCenter;
 
+            // Sem Centro Comunitario (rota Joja), nao existe bundle a completar.
+            // Sem esta guarda o mod leria "nada entregue" e anunciaria TODOS os
+            // bundles como pendentes — conselho falso, que e pior que silencio.
+            if (cc is null)
+            {
+                monitor.LogOnce("Centro Comunitario nao encontrado (rota Joja?); avisos de bundle desligados.", LogLevel.Info);
+                return result;
+            }
+
             foreach ((string key, string raw) in bundleData)
             {
                 BundleInfo? parsed = ParseOne(key, raw, cc, monitor);

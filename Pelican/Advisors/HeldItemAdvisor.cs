@@ -50,7 +50,8 @@ public sealed class HeldItemAdvisor : IAdvisor
                 Title: $"{name}: o museu ainda nao tem este",
                 Detail: "Leve ao Gunther. Doacoes contam para a Chave Enferrujada (60 itens) e para a Perfeicao.",
                 Consequence: "doavel ao museu",
-                Source: "ItemNaMao"
+                Source: "ItemNaMao",
+                Contextual: true
             ));
         }
 
@@ -88,7 +89,8 @@ public sealed class HeldItemAdvisor : IAdvisor
                     : $"Ainda falta neste bundle{slot.QualityLabel}.",
                 Consequence: consequence,
                 Source: "ItemNaMao",
-                RelatedItemIds: new[] { slot.ItemId }
+                RelatedItemIds: new[] { slot.ItemId },
+                Contextual: true
             );
         }
     }
@@ -108,7 +110,8 @@ public sealed class HeldItemAdvisor : IAdvisor
             Title: $"{name}: presente amado de {string.Join(", ", npcs.Take(4))}",
             Detail: npcs.Count > 4 ? $"e mais {npcs.Count - 4}." : "",
             Consequence: "8x amizade se for no aniversario",
-            Source: "ItemNaMao"
+            Source: "ItemNaMao",
+            Contextual: true
         );
     }
 

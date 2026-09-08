@@ -28,6 +28,12 @@ public enum Urgency
 /// <param name="Consequence">O que isto desbloqueia. E o que diferencia o Pelican dos outros mods.</param>
 /// <param name="Source">Advisor de origem, para diagnostico.</param>
 /// <param name="RelatedItemIds">Itens que este aviso menciona, para o UsageLog detectar que voce agiu.</param>
+/// <param name="Contextual">
+/// Aviso efemero, ligado ao que voce esta fazendo AGORA (item na mao, por exemplo).
+/// O HUD compacto mostra estes sempre, sem filtrar por urgencia: eles somem sozinhos
+/// quando o contexto muda, entao nao poluem, e filtra-los por urgencia os tornaria
+/// invisiveis justamente no momento em que sao uteis.
+/// </param>
 public sealed record Insight(
     string Id,
     Urgency Urgency,
@@ -35,7 +41,8 @@ public sealed record Insight(
     string Detail = "",
     string Consequence = "",
     string Source = "",
-    IReadOnlyList<string>? RelatedItemIds = null
+    IReadOnlyList<string>? RelatedItemIds = null,
+    bool Contextual = false
 )
 {
     public IReadOnlyList<string> Items => this.RelatedItemIds ?? Array.Empty<string>();

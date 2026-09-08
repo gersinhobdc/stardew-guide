@@ -77,12 +77,25 @@ public sealed class HudRenderer
 
     private void DrawCompact(SpriteBatch batch, GameSnapshot snapshot, IReadOnlyList<Insight> insights)
     {
-        // O painel compacto so mostra o que tem prazo. Info fica para o F9,
-        // senao o canto da tela vira uma parede de texto que voce para de ler.
-        var lines = insights
-            .Where(static i => i.Urgency > Urgency.Info)
+        // Regra do painel compacto: o que tem prazo, mais o que e contextual.
+        //
+        // Filtrar so por urgencia esconderia justamente os avisos de item na mao,
+        // que nascem como Info — eles nao sao urgentes, sao IMEDIATOS, e somem
+        // sozinhos quando voce troca de item. Contextual vem primeiro porque
+        // responde ao que voce esta fazendo neste segundo.
+        var contextual = insights
+            .Where(static i => i.Contextual)
             .OrderByDescending(static i => i.Urgency)
-            .Take(Math.Max(1, this.Config.MaxLinhasHud))
+            .ToList();
+
+        var scheduled = insights
+            .Where(static i => !i.Contextual && i.Urgency > Urgency.Info)
+            .OrderByDescending(static i => i.Urgency)
+            .ToList();
+
+        var lines = contextual
+            .Concat(scheduled)
+            .Take(Math.Max(1, this.Config.MaxLinhasHud + contextual.Count))
             .ToList();
 
         var rows = new List<(string Text, Color Color)>();
