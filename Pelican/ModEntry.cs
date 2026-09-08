@@ -68,6 +68,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("pelican_dump", "Despeja o estado que o Pelican esta lendo (diagnostico).", this.CommandDump);
         helper.ConsoleCommands.Add("pelican_uso", "Mostra o placar do Portao 1.", this.CommandUsage);
         helper.ConsoleCommands.Add("pelican_item", "Diagnostica o item na mao: id, bundles que o pedem, museu.", this.CommandItem);
+        helper.ConsoleCommands.Add("pelican_segredos", "Lista todos os segredos e itens escondidos do jogo.", this.CommandSecrets);
 
         this.Monitor.Log("Pelican carregado. Somente leitura, sem conteudo novo, sem rede.", LogLevel.Info);
     }
@@ -418,6 +419,47 @@ public sealed class ModEntry : Mod
     private void CommandUsage(string command, string[] args)
     {
         this.Monitor.Log(Environment.NewLine + this.Usage.Summary(), LogLevel.Info);
+    }
+
+    /// <summary>
+    /// Lista os segredos sob demanda. Eles sairam do fluxo diario de avisos
+    /// porque nao mudam nunca — 20 linhas fixas todo dia afogam os 2 que
+    /// realmente importam hoje —, mas continuam a um comando de distancia.
+    /// </summary>
+    private void CommandSecrets(string command, string[] args)
+    {
+        if (this.Secrets.Count == 0)
+        {
+            this.Monitor.Log("Nenhum segredo carregado (assets/secrets.json faltando?).", LogLevel.Warn);
+            return;
+        }
+
+        var lines = new List<string> { "", $"=== SEGREDOS ({this.Secrets.Count}) ===", "" };
+
+        foreach (Secret secret in this.Secrets)
+        {
+            string window = secret.HasWindow
+                ? $" [{secret.Estacao ?? "qualquer estacao"}"
+                    + (secret.DiaInicio.HasValue ? $" dia {secret.DiaInicio}" : "")
+                    + (secret.DiaFim.HasValue && secret.DiaFim != secret.DiaInicio ? $"-{secret.DiaFim}" : "")
+                    + (secret.AnoMin.HasValue ? $", ano {secret.AnoMin}+" : "")
+                    + "]"
+                : "";
+
+            string done = !string.IsNullOrWhiteSpace(secret.ItemId) && this.Snapshot?.HasCaught(secret.ItemId) == true
+                ? "  (JA FEITO)"
+                : "";
+
+            lines.Add($"* {secret.Titulo}{window}{done}");
+            lines.Add($"    {secret.Detalhe}");
+
+            if (!string.IsNullOrWhiteSpace(secret.Consequencia))
+                lines.Add($"    -> {secret.Consequencia}");
+
+            lines.Add("");
+        }
+
+        this.Monitor.Log(string.Join(Environment.NewLine, lines), LogLevel.Info);
     }
 
     /// <summary>

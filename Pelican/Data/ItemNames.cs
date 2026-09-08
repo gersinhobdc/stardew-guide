@@ -16,6 +16,8 @@ public static class ItemNames
     /// </summary>
     private static readonly Dictionary<string, string> Categories = new()
     {
+        // O bundle do Cofre pede dinheiro, e o jogo representa isso como id -1.
+        ["-1"] = "ouro",
         ["-2"] = "Qualquer gema",
         ["-4"] = "Qualquer peixe",
         ["-5"] = "Qualquer ovo",

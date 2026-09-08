@@ -38,12 +38,11 @@ public sealed class MissableAdvisor : IAdvisor
             if (!string.IsNullOrWhiteSpace(secret.ItemId) && snapshot.HasCaught(secret.ItemId))
                 continue;
 
-            // Sem janela: informativo puro, so no painel completo.
+            // Segredo sem data nunca muda: emiti-lo como aviso enche a lista com
+            // 20 linhas identicas todo dia e afoga os 2 que realmente importam
+            // hoje. Estes vivem no comando pelican_segredos, sob demanda.
             if (!secret.HasWindow)
-            {
-                results.Add(ToInsight(secret, Urgency.Info, secret.Titulo));
                 continue;
-            }
 
             Insight? windowed = Evaluate(secret, snapshot, today);
             if (windowed != null)

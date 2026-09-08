@@ -23,7 +23,9 @@ public static class BundleReader
     {
         ["O"] = "(O)",
         ["BO"] = "(BC)",
-        ["R"] = "(R)",
+        // Aneis vivem em Data/Objects, nao num registro proprio: "R 517" e o
+        // Anel de Brilho Pequeno, e resolver como "(R)517" nao acha nada.
+        ["R"] = "(O)",
         ["W"] = "(W)",
         ["H"] = "(H)",
         ["B"] = "(B)",
@@ -107,6 +109,8 @@ public static class BundleReader
                 }
             }
 
+            displayName = Readable(displayName);
+
             IReadOnlyList<bool> completed = ReadCompletion(cc, index, slots.Count);
 
             return new BundleInfo
@@ -174,6 +178,28 @@ public static class BundleReader
         }
 
         return new bool[slotCount];
+    }
+
+    /// <summary>
+    /// A traducao do jogo entrega alguns nomes ja preposicionados ("do Artesao",
+    /// "de Covo"), porque na tela do Centro Comunitario eles aparecem depois da
+    /// palavra "Pacote". Fora daquela tela ficam soltos, entao devolvemos o
+    /// substantivo que a traducao assume.
+    /// </summary>
+    private static string Readable(string displayName)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+            return displayName;
+
+        string[] danglingPrefixes = { "de ", "do ", "da ", "dos ", "das " };
+
+        foreach (string prefix in danglingPrefixes)
+        {
+            if (displayName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                return "Pacote " + displayName;
+        }
+
+        return displayName;
     }
 
     /// <summary>"O 388 50" vira "50x Madeira".</summary>
