@@ -22,6 +22,13 @@ public sealed class Secret
     /// <summary>Ano minimo em que isto pode acontecer.</summary>
     public int? AnoMin { get; set; }
 
+    /// <summary>
+    /// Id do item que este segredo rende, quando ha um. Se voce ja pescou/obteve,
+    /// o aviso para de aparecer — um lembrete que se repete depois de resolvido
+    /// e a forma mais rapida de te ensinar a ignorar o HUD.
+    /// </summary>
+    public string? ItemId { get; set; }
+
     /// <summary>Com quantos dias de antecedencia comecar a avisar.</summary>
     public int AvisarAntes { get; set; }
 

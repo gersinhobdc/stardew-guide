@@ -34,6 +34,10 @@ public sealed class MissableAdvisor : IAdvisor
 
         foreach (Secret secret in this.Secrets)
         {
+            // Ja conseguiu o que este segredo rende? Entao calado.
+            if (!string.IsNullOrWhiteSpace(secret.ItemId) && snapshot.HasCaught(secret.ItemId))
+                continue;
+
             // Sem janela: informativo puro, so no painel completo.
             if (!secret.HasWindow)
             {

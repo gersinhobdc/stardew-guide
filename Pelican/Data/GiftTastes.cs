@@ -48,6 +48,43 @@ public static class GiftTastes
         return result;
     }
 
+    /// <summary>Indice direto: NPC -> nomes dos itens que ele ama.</summary>
+    public static IReadOnlyDictionary<string, List<string>> LovedItemsPerNpc(IGameContentHelper content, IMonitor monitor)
+    {
+        var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            var raw = content.Load<Dictionary<string, string>>("Data/NPCGiftTastes");
+
+            foreach ((string npc, string line) in raw)
+            {
+                if (npc.StartsWith("Universal_", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                string[] parts = line.Split('/');
+                if (parts.Length < 2)
+                    continue;
+
+                var names = parts[1]
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(ItemNames.Resolve)
+                    .Where(static n => !string.IsNullOrWhiteSpace(n))
+                    .Distinct()
+                    .ToList();
+
+                if (names.Count > 0)
+                    result[npc] = names;
+            }
+        }
+        catch (Exception ex)
+        {
+            monitor.Log($"Nao consegui ler os presentes por NPC: {ex.Message}", LogLevel.Trace);
+        }
+
+        return result;
+    }
+
     private static string DisplayName(string internalName)
     {
         try

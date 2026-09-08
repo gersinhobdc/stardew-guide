@@ -32,6 +32,7 @@ public sealed class ModEntry : Mod
     private readonly List<IAdvisor> Advisors = new();
     private WeatherLuckAdvisor? WeatherAdvisor;
     private HeldItemAdvisor? HeldAdvisor;
+    private CalendarAdvisor? CalendarAdvisorRef;
 
     /// <summary>Ultimo slot da barra de ferramentas, para detectar troca de item na mao.</summary>
     private int LastToolIndex = -1;
@@ -107,7 +108,10 @@ public sealed class ModEntry : Mod
             this.Advisors.Add(new ChestStagingAdvisor());
 
         if (this.Config.AvisarCalendario)
-            this.Advisors.Add(new CalendarAdvisor(helper.GameContent, this.Monitor));
+        {
+            this.CalendarAdvisorRef = new CalendarAdvisor(helper.GameContent, this.Monitor);
+            this.Advisors.Add(this.CalendarAdvisorRef);
+        }
 
         if (this.Config.AvisarClimaSorte)
         {
@@ -126,6 +130,9 @@ public sealed class ModEntry : Mod
 
         if (this.Config.AvisarColheita)
             this.Advisors.Add(new HarvestAdvisor());
+
+        if (this.Config.AvisarColecao)
+            this.Advisors.Add(new CollectionAdvisor());
     }
 
     // ----------------------------------------------------------------- eventos
@@ -140,6 +147,7 @@ public sealed class ModEntry : Mod
     {
         this.WeatherAdvisor?.InvalidateCache();
         this.HeldAdvisor?.InvalidateCache();
+        this.CalendarAdvisorRef?.InvalidateCache();
         this.AnnouncedReady.Clear();
         this.Dirty = true;
 

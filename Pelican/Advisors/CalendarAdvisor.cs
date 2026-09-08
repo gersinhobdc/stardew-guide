@@ -16,6 +16,7 @@ public sealed class CalendarAdvisor : IAdvisor
 {
     private readonly IGameContentHelper Content;
     private readonly IMonitor Monitor;
+    private IReadOnlyDictionary<string, List<string>>? LovedCache;
 
     public CalendarAdvisor(IGameContentHelper content, IMonitor monitor)
     {
@@ -24,6 +25,8 @@ public sealed class CalendarAdvisor : IAdvisor
     }
 
     public string Name => "Calendario";
+
+    public void InvalidateCache() => this.LovedCache = null;
 
     public IEnumerable<Insight> Advise(GameSnapshot snapshot)
     {
@@ -159,6 +162,13 @@ public sealed class CalendarAdvisor : IAdvisor
 
                 string displayName = SafeDisplayName(name);
 
+                // Avisar do aniversario sem dizer o que dar deixa o trabalho pela
+                // metade: a pergunta seguinte é sempre "e agora, levo o que?".
+                this.LovedCache ??= GiftTastes.LovedItemsPerNpc(this.Content, this.Monitor);
+                string gifts = this.LovedCache.TryGetValue(name, out List<string>? loved) && loved.Count > 0
+                    ? string.Join(", ", loved.Take(4))
+                    : "";
+
                 results.Add(new Insight(
                     Id: $"aniversario:{name}:{snapshot.Year}",
                     Urgency: delta == 0 ? Urgency.Today : Urgency.Soon,
@@ -168,8 +178,12 @@ public sealed class CalendarAdvisor : IAdvisor
                         1 => $"Amanha e aniversario de {displayName}",
                         _ => $"Aniversario de {displayName} em {delta} dias"
                     },
-                    Detail: "Presente amado no aniversario vale 8x amizade. Use F1 no NPC para ver o que ele gosta.",
-                    Consequence: delta == 0 ? "so hoje vale o bonus" : "",
+                    Detail: gifts.Length > 0
+                        ? $"Ele(a) ama: {gifts}. Presente amado no aniversario vale 8x amizade."
+                        : "Presente amado no aniversario vale 8x amizade.",
+                    Consequence: gifts.Length > 0
+                        ? $"ama {gifts.Split(',')[0].Trim()}"
+                        : (delta == 0 ? "so hoje vale o bonus" : ""),
                     Source: "Calendario"
                 ));
             }

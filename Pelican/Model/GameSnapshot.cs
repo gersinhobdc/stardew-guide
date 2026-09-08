@@ -63,6 +63,30 @@ public sealed class GameSnapshot
     /// <summary>Fazendeiros na partida, para o quadro de co-op.</summary>
     public IReadOnlyList<Farmer> Farmers { get; init; } = Array.Empty<Farmer>();
 
+    /// <summary>
+    /// Ids de peixe ja pescados, com e sem qualificador. Guardar as duas formas
+    /// evita depender de qual delas a versao do jogo usa em fishCaught.
+    /// </summary>
+    public IReadOnlySet<string> FishCaught { get; init; } = new HashSet<string>();
+
+    /// <summary>Pecas ja doadas ao museu.</summary>
+    public int MuseumDonated { get; init; }
+
+    /// <summary>Total de pecas que o museu aceita.</summary>
+    public int MuseumTotal { get; init; } = 95;
+
+    public int MuseumRemaining => Math.Max(0, this.MuseumTotal - this.MuseumDonated);
+
+    /// <summary>Ja pescou este item? Aceita id com ou sem qualificador.</summary>
+    public bool HasCaught(string itemId)
+    {
+        if (string.IsNullOrWhiteSpace(itemId))
+            return false;
+
+        return this.FishCaught.Contains(itemId)
+            || this.FishCaught.Contains($"(O){itemId}");
+    }
+
     public IEnumerable<BundleInfo> IncompleteBundles => this.Bundles.Where(static b => !b.IsComplete);
 
     /// <summary>Recompensa da sala, quando conhecida.</summary>

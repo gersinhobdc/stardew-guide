@@ -63,7 +63,9 @@ public static class SnapshotBuilder
             HasStagingChest = config.TemBauMarcado,
             Bundles = BundleReader.ReadAll(monitor),
             RoomRewards = roomRewards,
-            Farmers = ReadFarmers()
+            Farmers = ReadFarmers(),
+            FishCaught = ReadFishCaught(),
+            MuseumDonated = ReadMuseumCount()
         };
     }
 
@@ -158,6 +160,48 @@ public static class SnapshotBuilder
         }
 
         return null;
+    }
+
+    /// <summary>Peixes ja pescados, guardados com e sem qualificador.</summary>
+    private static IReadOnlySet<string> ReadFishCaught()
+    {
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            foreach (string key in Game1.player.fishCaught.Keys)
+            {
+                if (string.IsNullOrWhiteSpace(key))
+                    continue;
+
+                result.Add(key);
+
+                int close = key.IndexOf(')');
+                if (close >= 0)
+                    result.Add(key[(close + 1)..]);
+            }
+        }
+        catch
+        {
+            // Save nao carregado ou API mudou: trata como "nao pescou nada",
+            // que so causa um aviso a mais, nunca um errado.
+        }
+
+        return result;
+    }
+
+    private static int ReadMuseumCount()
+    {
+        try
+        {
+            return Game1.getLocationFromName("ArchaeologyHouse") is LibraryMuseum museum
+                ? museum.museumPieces.Count()
+                : 0;
+        }
+        catch
+        {
+            return 0;
+        }
     }
 
     /// <summary>

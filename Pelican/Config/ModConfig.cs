@@ -71,6 +71,9 @@ public sealed class ModConfig
     /// <summary>Plantacoes prontas e, principalmente, as que nao dao tempo de colher.</summary>
     public bool AvisarColheita { get; set; } = true;
 
+    /// <summary>Quanto falta para as recompensas do museu.</summary>
+    public bool AvisarColecao { get; set; } = true;
+
     // ---- Bau de staging ----
 
     /// <summary>Nome interno da localizacao do bau. Preenchido pela tecla de marcar.</summary>
